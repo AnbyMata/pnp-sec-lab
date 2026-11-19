@@ -1,6 +1,7 @@
-import json, subprocess, re
+import json, subprocess, re, os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 SERVICES = {"php", "python", "spring", "db"}
+PNP_MODE = os.environ.get("PNP_MODE", "dev")
 def run(args):
     try:
         p = subprocess.run(["docker", "compose", *args], text=True, capture_output=True, timeout=90)
@@ -12,6 +13,7 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(data, ensure_ascii=False).encode()
         self.send_response(status); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
+        if self.path == "/api/config": return self.reply(200, {"mode": PNP_MODE, "tools": {"shell": PNP_MODE != "prod", "attacker": PNP_MODE != "prod"}})
         if self.path != "/api/status": return self.reply(404, {"error":"Not found"})
         ok, output = run(["ps", "--all", "--format", "json"])
         if not ok: return self.reply(500, {"error":output})
@@ -21,6 +23,8 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, KeyError) as e: self.reply(500, {"error":str(e)})
     def do_POST(self):
         if self.path not in ("/api/service", "/api/shell", "/api/sql"): return self.reply(404, {"error":"Not found"})
+        # prod: shell, SQL console and service control (docker.sock) stay off server-side, not just hidden in the UI.
+        if PNP_MODE == "prod": return self.reply(403, {"error":"Disabled in prod mode"})
         if self.headers.get("Origin") not in ("http://localhost:8000", "http://127.0.0.1:8000") or self.headers.get("Content-Type", "").split(";")[0] != "application/json": return self.reply(403, {"error":"Forbidden"})
         try:
             length = int(self.headers.get("Content-Length", 0))

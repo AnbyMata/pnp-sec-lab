@@ -16,6 +16,18 @@ docker compose up -d --build
 - PHP 실습: `http://localhost:10001`
 - Python 실습: `http://localhost:10002`
 - Spring 실습: `http://localhost:10003`
+- 도구 실험실(개발 전용): `http://localhost:8000/tools-lab.html`
+
+## 실습 도구
+
+챌린지 화면의 도구 탭: 요청 워크벤치, 인스펙터, 서버 로그, 공격자 서버, 쿼리 실험실, 터미널, 도구 안내. 챌린지별 opt-in 방식과 ctx 필드는 `docs/TOOLS.md` 참고.
+
+추가 컨테이너 2개:
+
+- `tools-proxy` — 워크벤치 요청을 허용 목록 URL로만 중계(포털 `/api/tools/request` 경유, 외부 네트워크 차단).
+- `attacker` — 공격자 서버. 공개 포트 `127.0.0.1:10010`(저장 HTML 페이지 + `/cb/` 콜백, 루프백에만 게시), 관리 API는 컨테이너 내부 `8001`로 nginx `/api/attacker/` 경유만 가능(게시되지 않음). 공개 페이지는 포털과 다른 출처에서 실행되는 것이 보안 경계다.
+
+도구 테스트: `bash tests/run-tools.sh`
 
 ## Test accounts
 
