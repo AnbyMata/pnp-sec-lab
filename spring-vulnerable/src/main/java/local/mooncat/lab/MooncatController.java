@@ -43,6 +43,7 @@ public class MooncatController {
     @GetMapping("/health") public org.springframework.http.ResponseEntity<Map<String,String>> health() { return org.springframework.http.ResponseEntity.ok(Map.of("status","ok")); }
     @GetMapping("/") public String home(Model model, HttpSession session) { sessionModel(model,session); model.addAttribute("latest",jdbc.queryForList("SELECT * FROM board_modern ORDER BY id DESC LIMIT 3")); return "index"; }
     @GetMapping("/login") public String loginForm(Model model,HttpSession session) { sessionModel(model,session); return "login"; }
+    @GetMapping("/store") public String store(Model model,HttpSession session) { sessionModel(model,session); return "store"; }
     @PostMapping("/login") public String login(@RequestParam(defaultValue="") String userId,@RequestParam(defaultValue="") String password,Model model,HttpSession session) {
         Map<String,Object> user=one("SELECT * FROM member_modern WHERE user_id='"+userId+"' AND password='"+password+"'");
         if(user==null){sessionModel(model,session);model.addAttribute("error","아이디 또는 비밀번호를 확인해 주세요.");return "login";}

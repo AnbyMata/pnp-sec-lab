@@ -37,6 +37,8 @@ from .lab_routes import router as lab_router, start_receiver, stop_receiver
 from .server_challenges import router as server_router, initialize as initialize_challenges, FLAGS as SERVER_FLAGS
 app.include_router(lab_router)
 app.include_router(server_router)
+from .shop import router as shop_router
+app.include_router(shop_router)
 app.add_event_handler("startup", initialize_challenges)
 app.add_event_handler("startup", start_receiver)
 app.add_event_handler("shutdown", stop_receiver)
@@ -303,8 +305,12 @@ def internal_note(request: Request):
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    latest = fetch_all("SELECT * FROM board_modern ORDER BY id DESC LIMIT 3")
-    return page(request, "index.html", latest=latest)
+    return page(request, "nebula-home.html")
+
+
+@app.get("/store", response_class=HTMLResponse)
+def store(request: Request):
+    return page(request, "store.html")
 
 
 @app.get("/login", response_class=HTMLResponse)

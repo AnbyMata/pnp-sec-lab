@@ -1,0 +1,43 @@
+/* 60% near-black canvas, 30% navy surfaces, 10% warm yellow accents. */
+:root{--ink:#f2f6fc;--muted:#9faec2;--purple:#f3d35e;--deep:#142d50;--line:#283d57;--shadow:0 20px 65px #0008;color-scheme:dark}
+html{background:#06090f}
+body{background:#06090f;position:relative;isolation:isolate;min-height:100vh}
+body:before{display:block;content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:1;background:#02050b url('/static/starfield-background.png') center/cover no-repeat}
+body:after{display:none}
+.cosmic-background{display:none}
+.cosmic-background i{position:absolute;display:block;width:94vw;height:30vh;left:-34vw;top:-16vh;border:1px solid #1d95e82b;border-radius:50%;transform:rotate(-23deg);box-shadow:0 1px 8px #118fde12,inset 0 -1px 8px #1688e312}
+.cosmic-background i:nth-child(2){left:-25vw;top:-19vh;width:91vw;height:32vh;transform:rotate(-17deg);border-color:#138bdb1f}
+.cosmic-background i:nth-child(3){left:28vw;top:78vh;width:95vw;height:34vh;transform:rotate(-19deg);border-color:#238ee538;box-shadow:0 -1px 14px #1675d519}
+.cosmic-background i:nth-child(4){left:35vw;top:85vh;width:91vw;height:27vh;transform:rotate(-11deg);border-color:#208fe32e}
+.cosmic-background:before,.cosmic-background:after{content:'';position:absolute;width:24vw;height:13vh;border-radius:50%;filter:blur(22px);background:radial-gradient(ellipse,#079ce035,#0875c31c 35%,transparent 70%);left:1vw;top:5vh;transform:rotate(-27deg)}
+.cosmic-background:after{left:auto;top:auto;right:0;bottom:6vh;width:32vw;transform:rotate(-18deg)}
+.site-header{border-color:#a9cff01c}.brand small{color:#8198b2}.site-header nav{color:#a7b8cc}.site-header nav a:hover{color:#f3d35e}.space-hero:before{background-image:linear-gradient(90deg,#06090ff5 4%,#06090fbf 34%,#06090f15 76%),linear-gradient(0deg,#06090f,transparent 35%,#06090f22 80%,#06090f88),url('/static/galaxy-reference.png')}.space-hero:after{background:radial-gradient(ellipse at 74% 56%,#174c7d25,transparent 55%)}.hero-copy p{color:#bac9db}.hero-caption{color:#8195ae}.ghost{background:#07111c77;border-color:#49617c;color:#e3edf8}.planet-coordinate{color:#a9c4df}.discovery-tag{background:#091624bf;border-color:#5577985c;color:#b9d2e9}.space-divider{color:#859bb6;border-color:#a9cff01c}.section-heading p{color:#a0b0c4}.catalog-badge{color:#a3bcd5;border-color:#34516e;background:#0c1b2b80}.planet-card{background:#0f2035;border-color:#294564}.planet-card:hover{border-color:#5889b5}.planet-visual{background:#070d17;border-color:#294564;height:260px}.planet-visual:before{display:none}.planet-image{display:block;width:100%;height:100%;object-fit:cover}.planet-type{z-index:1;color:#d5e6f7;background:#07111bbf;border:1px solid #7593b040;border-radius:3px;padding:3px 8px;top:14px;left:16px;font-size:11px;backdrop-filter:blur(5px)}.catalog-code{z-index:1;color:#afc7df;text-shadow:0 1px 5px #000;left:16px;bottom:14px}.planet-info p{color:#a3b8ce}.planet-bottom{border-color:#a8c9ee17;color:#809ab6}.planet-bottom strong{color:#f2f6fc}.detail-button{border-color:#6b633f;color:#f3d35e}.store-note{color:#8299b2}.story-card{background:#102138f0;border-color:#2a4564}.story-card:hover{background:#172e49;border-color:#547ca3}.story-card p{color:#a0b6cf}.empty{color:#9db2ca}.form-card,.form-card.large,.board-table,.search-bar{background:#102138f2;border-color:#2a4665;box-shadow:0 15px 55px #0004}.board-head{background:#173658;color:#d2e4f7}.board-row{border-color:#2a4665}.board-row:not(.board-head):hover{background:#183350}.board-hero p,.form-head p,.form-link,.auth-aside p,.oracle-copy p,.post-meta{color:#a4b9cf}.search-summary{color:#a6bdd5}.post{padding:28px;background:#0b1829e8;border:1px solid #253e59;border-radius:8px}.post-top{border-color:#2a4665}.attachment{background:#183757;color:#d2e4f6}.post-body{color:#e1eaf5}input,select,textarea{background:#081321;border-color:#314e6d;color:#eaf3fd}input:disabled{color:#829ab4}.auth-planet{background:radial-gradient(circle at 26% 25%,#b5dff8,#3e83b5 30%,#12345a 65%,#060c15 85%);box-shadow:inset -20px -18px 40px #030912,0 0 80px #1a71b333}.orb{border-color:#8f7a3d;background:radial-gradient(circle at 30% 25%,#d0ebff,#347bab 40%,#102b4b);box-shadow:0 0 55px #246ca144}.oracle-result{background:#060e19;border-color:#294665;color:#c7def7}.success{background:#0d3a3a;color:#9fe5cd}.alert{background:#452b30;color:#f5c7ca}footer{background:#06090fbf;border-color:#a9cff01c;color:#829bb6}footer strong{color:#c8dcee}dialog{background:#102138;border-color:#3e6389;color:#e5f1fd}dialog::backdrop{background:#02060dc9;backdrop-filter:blur(6px)}.dialog-close{color:#c4d6e9}.form-head h2,.section-heading h1,.section-heading h2{color:#f2f6fc}
+.planet-image{object-fit:contain;background:#070b13}
+.harbor-hero{min-height:max(660px,calc(100vh - 235px))}
+.site-header .brand .brand-version{display:inline-block;margin-left:16px;font-size:12px;line-height:1;font-weight:400;letter-spacing:0;color:#a3adbb;vertical-align:baseline}
+.auth-aside .auth-planet{display:block;width:300px;max-width:100%;height:300px;margin:40px auto;object-fit:contain;background:none;border-radius:0;box-shadow:none;filter:none;clip-path:ellipse(42.5% 42% at 50.4% 49.4%)}
+.oracle-copy .observatory-planet{display:block;width:240px;max-width:100%;height:240px;margin:40px auto;object-fit:contain;clip-path:ellipse(42.5% 42% at 50.4% 49.4%);filter:hue-rotate(165deg) saturate(.7)}
+.space-hero.harbor-hero:before{background-image:linear-gradient(90deg,#06090ff5 4%,#06090fbf 34%,#06090f15 76%),linear-gradient(0deg,#06090f,transparent 35%,#06090f22 80%,#06090f88),url('/static/galaxy-hero-v2.png')}
+.search-bar,.board-table{background:rgba(6,12,21,.97);border-color:#202d3e;box-shadow:0 12px 35px #0003}
+.board-head{background:#0e1c2d;color:#bdccdf}
+.board-row{border-color:#1a2737}
+.board-row:not(.board-head):hover{background:#0c1929}
+.search-bar input,.search-bar select{background:#040a12;border-color:#25364b}
+/* Shared dark glass surfaces: keep text sharp, soften the surrounding edges. */
+:root{--line:rgba(124,155,194,.12);--shadow:0 16px 42px rgba(0,0,0,.22)}
+.planet-card,.story-card,.form-card,.form-card.large,.search-bar,.board-table,.post,dialog{background:rgba(6,13,23,.94);border-color:rgba(120,150,188,.13);box-shadow:0 0 16px rgba(65,105,157,.035),0 16px 42px rgba(0,0,0,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.planet-card:hover,.story-card:hover{background:rgba(10,21,36,.96);border-color:rgba(132,164,205,.23)}
+.planet-info{background:transparent}
+.planet-visual{border-color:rgba(120,150,188,.1)}
+.board-head{background:rgba(15,29,46,.85)}
+.board-row,.planet-bottom,.post-top{border-color:rgba(120,150,188,.09)}
+.site-header,.space-divider,footer{border-color:rgba(135,164,201,.1);box-shadow:0 1px 12px rgba(100,150,205,.025)}
+.space-divider{background:linear-gradient(90deg,transparent,rgba(10,22,38,.2),transparent)}
+input,select,textarea,.search-bar input,.search-bar select{background:rgba(3,9,16,.9);border-color:rgba(127,155,189,.19);box-shadow:inset 0 1px 5px rgba(0,0,0,.18)}
+input:focus,select:focus,textarea:focus{border-color:rgba(225,202,108,.5);box-shadow:0 0 12px rgba(225,202,108,.08)}
+.oracle-result,.attachment{background:rgba(3,10,19,.88);border:1px solid rgba(117,149,187,.12);box-shadow:inset 0 0 15px rgba(0,0,0,.1)}
+.catalog-badge,.planet-type,.discovery-tag{background:rgba(5,13,23,.7);border-color:rgba(132,163,199,.14);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.ghost{background:rgba(5,12,21,.65);border-color:rgba(150,171,198,.25)}
+.detail-button,.nav-pill{border-color:rgba(219,192,93,.3)}
+.form-card code,.form-card pre{overflow-wrap:anywhere}
+@media(max-width:700px){.space-hero:before{background-image:linear-gradient(90deg,#06090fe6,#06090f66),linear-gradient(0deg,#06090f,transparent 40%),url('/static/galaxy-reference.png')}.planet-visual{height:270px}.post{padding:20px 16px}.board-table{overflow:auto}}

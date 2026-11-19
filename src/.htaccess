@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^api/store/(catalog(?:/[a-z]+)?|wallet|inventory|orders|quote|purchase)/?$ api/store.php?action=$1 [L,QSA]

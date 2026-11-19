@@ -1,0 +1,15 @@
+USE WebTest;
+CREATE TABLE IF NOT EXISTS nebula_wallet (
+ user_id VARCHAR(191) PRIMARY KEY,
+ balance INT NOT NULL DEFAULT 10000
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS nebula_orders (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
+ user_id VARCHAR(191) NOT NULL,
+ planet_id VARCHAR(32) NOT NULL,
+ total INT NOT NULL,
+ coupon VARCHAR(32) NULL,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ UNIQUE KEY owned_planet (user_id, planet_id),
+ UNIQUE KEY used_coupon (user_id, coupon)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

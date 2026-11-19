@@ -8,7 +8,7 @@
 		<!-- CSS Style 지정 -->
 		<link rel="stylesheet" href="/shared/style.css">
   <link rel="stylesheet" href="../style_contents.css?v=20261113-2" type="text/css">			
-	</head>
+	<link rel="stylesheet" href="/static/nebula.css"><link rel="stylesheet" href="/static/nebula-space.css"><link rel="stylesheet" href="/static/nebula-ocean.css?v=9"></head>
 	<body>
 		<!-- 화면 상단 header 부분 -->
 			<iframe src="../head.php" id="bodyFrame" name="body" width="100%" frameborder="0"></iframe>
