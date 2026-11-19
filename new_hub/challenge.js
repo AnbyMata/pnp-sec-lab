@@ -21,8 +21,16 @@ setText('.description', challenge.description);
 setText('.disclosures details:first-child p', challenge.hint);
 setText('.disclosures details:last-child p', challenge.theory);
 setText('.lab-header h2', `${challenge.category} 실습 환경`);
+setText('.badges span:first-child', challenge.level);
+setText('.badges span:nth-child(2)', challenge.category);
+document.querySelectorAll('[data-target="php"], [data-target="spring"]').forEach((button) => button.remove());
+const theoryLink = document.createElement('a');
+theoryLink.href = `lesson.html?topic=${encodeURIComponent(challenge.courseId)}`;
+theoryLink.textContent = '관련 학습 과정 보기';
+document.querySelector('.disclosures details:last-child').append(theoryLink);
 setText('.browser-bar .address', challenge.labUrl);
 document.querySelector('.target-note').textContent = '이 문제의 플래그는 Python 실습 사이트에만 준비되어 있습니다. 실습 환경에서 찾아 제출해 주세요.';
+document.querySelector('.flag-note').textContent = '최종 플래그 하나를 제출하면 해결 기록이 현재 브라우저에 저장됩니다.';
 
 const frame = document.querySelector('#lab-frame');
 frame.src = challenge.labUrl;

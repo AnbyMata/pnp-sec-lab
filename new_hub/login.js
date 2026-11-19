@@ -14,6 +14,7 @@ form.addEventListener('submit', (event) => {
   event.preventDefault();
   const email = document.querySelector('#email').value.trim().toLowerCase();
   if (email === 'test@pnp.local' && password.value === 'pnp1234') {
+    localStorage.setItem('pnp_nickname', '테스트 사용자');
     localStorage.setItem('pnp_authenticated', 'true');
     window.location.assign('home.html');
   } else {

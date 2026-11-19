@@ -35,11 +35,14 @@ services:
       DB_NAME: WebTest
       DB_USER: mooncat
       DB_PASSWORD: mooncat123
+      MONGO_URI: mongodb://mongo:27017
     volumes:
       - ./src/board/upload:/app/app/uploads
       - ./shared/style.css:/app/app/static/style.css:ro
     depends_on:
       db:
+        condition: service_healthy
+      mongo:
         condition: service_healthy
   spring:
     build: ./spring-vulnerable
@@ -81,8 +84,19 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+  mongo:
+    image: mongo:7.0
+    networks: [lab]
+    volumes:
+      - mongo_test:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 volumes:
   unified_db:
+  mongo_test:
 networks:
   lab:
     internal: true

@@ -11,6 +11,7 @@
       link.innerHTML = signedIn
         ? '<span class="avatar" aria-hidden="true"><img src="hacker-avatar-transparent.png?v=20261118" alt=""></span><span>내 계정</span>'
         : '<span class="avatar" aria-hidden="true"><img src="hacker-avatar-transparent.png?v=20261118" alt=""></span><span>로그인</span><span aria-hidden="true">↗</span>';
+      if (signedIn) link.querySelector('span:not(.avatar)').textContent = localStorage.getItem('pnp_nickname') || '테스트 사용자';
     });
     const banner = document.querySelector('#guest-notice');
     if (banner) banner.hidden = signedIn;
@@ -22,6 +23,7 @@
       logout.textContent = '로그아웃';
       logout.addEventListener('click', () => {
         localStorage.removeItem(key);
+        localStorage.removeItem('pnp_nickname');
         sessionStorage.removeItem(key);
         location.assign('home.html');
       });

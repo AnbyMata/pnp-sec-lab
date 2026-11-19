@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Server-side 실습 · PNP{% endblock %}
+{% block content %}
+<section class="narrow"><div class="form-card large">
+{% if mode == 'auth' %}
+<span class="eyebrow">AUTHENTICATION</span><h1>분실된 관리자 재설정 링크</h1>
+<p>student 계정의 재설정 링크를 관찰하고 관리자 계정의 복구 절차를 통과하세요.</p>
+<form method="post"><label>계정<input name="username" value="student" required></label><label>재설정 토큰<input name="token" placeholder="비워 두면 링크 발급"></label><button class="button primary">계정 복구</button></form>
+{% elif mode == 'upload' %}
+<span class="eyebrow">FILE UPLOAD</span><h1>이미지 전용 보관함</h1>
+<p>이미지만 받는 업로드 기능입니다. 내용에 &lt;html&gt;이 포함된 .html 파일을 업로드하여 검증의 허점을 확인하세요. 서버 코드 실행은 필요하지 않습니다.</p>
+<form method="post" enctype="multipart/form-data"><label>파일 (최대 64KB)<input type="file" name="attachment" required></label><button class="button primary">파일 업로드</button></form>
+{% else %}
+<span class="eyebrow">NOSQL INJECTION</span><h1>문서형 인증 게이트</h1>
+<p>JSON 로그인 요청을 관찰하고 관리자 인증을 우회하세요. 계정명은 admin입니다.</p>
+<form id="nosql-form"><label>JSON 요청<textarea id="payload" rows="6">{"username":"admin","password":"wrong-password"}</textarea></label><button class="button primary">로그인 요청</button></form><pre id="result" class="oracle-result" aria-live="polite"></pre>
+<script>document.querySelector('#nosql-form').addEventListener('submit',async event=>{event.preventDefault();const output=document.querySelector('#result');try{const response=await fetch(location.pathname,{method:'POST',headers:{'Content-Type':'application/json'},body:document.querySelector('#payload').value});output.textContent=JSON.stringify(await response.json(),null,2)}catch{output.textContent='요청에 실패했습니다.'}});</script>
+{% endif %}
+{% if message %}<p class="alert" role="status">{{ message }}</p>{% endif %}
+{% if flag %}<div class="oracle-result"><h2>최종 플래그</h2><code>{{ flag }}</code></div>{% endif %}
+</div></section>
+{% endblock %}

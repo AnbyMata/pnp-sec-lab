@@ -12,7 +12,7 @@ window.pnpChallenges.forEach((challenge, index) => {
   const card = document.createElement('article');
   card.className = 'learning-card challenge-card';
   const status = challenge.ready ? '실습 가능' : '실습 준비 중';
-  card.innerHTML = `<div class="card-number">${String(index + 1).padStart(2, '0')} <span>↗</span></div><div class="card-content"><p class="card-category">PNP CHALLENGE <span>/</span> ${challenge.level}</p><h2>${challenge.title}</h2><p>${challenge.description}</p><div class="card-meta"><span>${status}</span><span>${challenge.level}</span></div></div><button class="card-state" type="button">챌린지 시작 ↗</button>`;
+  card.innerHTML = `<div class="card-number">${String(index + 1).padStart(2, '0')} <span>↗</span></div><div class="card-content"><p class="card-category">PNP CHALLENGE <span>/</span> ${challenge.level}</p><h2>${challenge.title}</h2><p></p><div class="card-meta"><span>${status}</span><span>${challenge.level}</span></div></div><button class="card-state" type="button">챌린지 시작 ↗</button>`;
   card.querySelector('button').addEventListener('click', () => {
     if (localStorage.getItem('pnp_authenticated') !== 'true') {
       accessDialog.showModal();
@@ -25,6 +25,9 @@ window.pnpChallenges.forEach((challenge, index) => {
     document.querySelector('#coming-title').textContent = `${challenge.title} 준비 중`;
     comingDialog.showModal();
   });
+  card.querySelector('.card-content > p:not(.card-category)').textContent = challenge.description;
+  card.querySelector('.card-category').textContent = challenge.category;
   list.append(card);
 });
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+

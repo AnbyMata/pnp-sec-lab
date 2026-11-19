@@ -27,7 +27,10 @@ TRAVERSAL_FLAG = os.getenv("TRAVERSAL_LAB_FLAG", "PNP{lab_flag_not_configured}")
 XSS_FLAG = os.getenv("XSS_LAB_FLAG", "PNP{lab_flag_not_configured}")
 SSRF_FLAG = os.getenv("SSRF_LAB_FLAG", "PNP{lab_flag_not_configured}")
 from .lab_routes import router as lab_router, start_receiver, stop_receiver
+from .server_challenges import router as server_router, initialize as initialize_challenges, FLAGS as SERVER_FLAGS
 app.include_router(lab_router)
+app.include_router(server_router)
+app.add_event_handler("startup", initialize_challenges)
 app.add_event_handler("startup", start_receiver)
 app.add_event_handler("shutdown", stop_receiver)
 
@@ -113,6 +116,7 @@ async def verify_sqli_flag(request: Request):
 @app.post("/lab/challenges/{challenge_id}/verify")
 async def verify_lab_flag(challenge_id: str, request: Request):
     flags = {
+        **SERVER_FLAGS,
         "idor-profile": IDOR_FLAG,
         "path-traversal": TRAVERSAL_FLAG,
         "reflected-xss": XSS_FLAG,
