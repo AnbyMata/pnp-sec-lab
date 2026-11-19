@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}{{ title }} · 달빛 고양이{% endblock %}{% block content %}
+<section class="narrow"><div class="section-heading"><div><span class="eyebrow">SECURITY LAB</span><h1>{{ title }}</h1></div></div><div class="form-card large"><p>{{ description }}</p>
+{% if mode == 'dom' %}
+<h3>URL 입력 결과</h3><div id="dom-result" class="oracle-result"></div><p>주소 예제: <code>#%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E</code></p>
+<script>function renderFragment(){try{document.getElementById('dom-result').innerHTML=decodeURIComponent(location.hash.slice(1))}catch(e){document.getElementById('dom-result').textContent='URL 인코딩을 확인하세요.'}}window.addEventListener('hashchange',renderFragment);renderFragment();</script>
+{% elif mode == 'blind' %}
+<form method="get"><label>대상 URL<input name="url" value="{{ url }}" placeholder="http://127.0.0.1:9001/observe?token=blind-demo"></label><label>조회할 token<input name="token" value="{{ token }}"></label><button class="button primary">서버 요청 보내기</button></form><p id="blind-result">{{ message }}</p><a class="button ghost" href="/lab/callbacks?token={{ token|urlencode }}">요청 기록 확인</a>
+{% elif mode == 'callbacks' %}
+<form method="get"><label>token<input name="token" value="{{ token }}"></label><button class="button primary">기록 조회</button></form><div id="callback-events">{% for row in rows %}<p class="success">{{ row.time }} · {{ row.method }} · {{ row.token }}</p>{% else %}<p>해당 token의 요청 기록이 없습니다.</p>{% endfor %}</div>
+{% elif mode == 'rainbow' %}
+<form method="get"><label>실습 관리자 번호<input type="number" min="1" name="admin_id" value="{{ admin_id }}"></label><button class="button primary">관리자 해시 조회 및 테이블 탐색</button></form>{% if admin %}<div class="oracle-result" id="admin-record">테이블: lab_admin_members<br>계정: {{ admin.username }} ({{ admin.id }})<br>알고리즘: {{ admin.hash_algorithm }} · 솔트 없음<br>저장된 해시: {{ admin.password_hash }}</div>{% endif %}<form method="get"><input type="hidden" name="admin_id" value="{{ admin_id }}"><label>직접 조회할 MD5 해시<input name="hash" value="{{ target }}" placeholder="{{ sample }}"></label><button class="button ghost">입력한 해시 탐색</button></form>{% if error %}<p class="alert">{{ error }}</p>{% elif result %}<p class="success" id="rainbow-result">일치한 원문 후보: <strong>{{ result }}</strong> · MD5 재검증 완료</p>{% elif target %}<p>테이블 후보 범위에서 찾지 못했습니다.</p>{% endif %}
+{% endif %}</div></section>{% endblock %}

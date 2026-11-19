@@ -1,0 +1,20 @@
+const fs=require('fs');const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const checks=[];const assert=(ok,name)=>{if(!ok)throw Error(name);checks.push(name);console.log('PASS',name)};
+try{for(const width of [1400,390]){
+ const page=await b.newPage({viewport:{width,height:900}});await page.goto('http://localhost:8000',{waitUntil:'domcontentloaded'});
+ const address=page.getByRole('textbox',{name:'실습 URL 주소창'});
+ await address.fill('http://localhost:10002/board?keyword=workspace-test');await address.press('Enter');
+ await page.frameLocator('#frame').locator('.board-hero').waitFor();assert((await page.frameLocator('#frame').locator('[name=keyword]').inputValue())==='workspace-test',width+' Enter navigates with query');
+ assert(await page.locator('.tab.active').innerText()==='Python',width+' auto selects Python');
+ await address.fill('http://localhost:10003/board?keyword=spring-test');await page.locator('#address-go').click();await page.frameLocator('#frame').locator('.board-hero').waitFor();
+ assert(await page.locator('.tab.active').innerText()==='Spring',width+' Go navigates to Spring');
+ await address.fill('/board?keyword=relative-test');await address.press('Enter');await page.frameLocator('#frame').locator('[name=keyword]').waitFor();
+ assert((await page.locator('#frame').getAttribute('src')).includes('10003/board?keyword=relative-test'),width+' relative URL uses current server');
+ await page.getByRole('button',{name:'설정',exact:true}).click();assert(await address.getAttribute('readonly')!==null,width+' settings is not a URL destination');
+ await page.getByRole('button',{name:'Spring',exact:true}).click();assert((await address.inputValue()).includes('relative-test'),width+' destination retained on tab return');
+ await address.fill('javascript:alert(1)');await address.press('Enter');assert((await page.locator('#address-error').innerText()).length>0,width+' rejects non-lab navigation');
+ const alerts=[];page.on('dialog',async d=>{alerts.push(d.message());await d.accept()});
+ await address.fill('http://localhost:10002/lab/dom#%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');await address.press('Enter');await page.frameLocator('#frame').locator('#dom-result img').waitFor();await page.waitForFunction(()=>document.querySelector('#frame').src.includes('/lab/dom#'));
+ assert(alerts.includes('1'),width+' attack URL executes inside workspace');
+ await page.close();
+}fs.writeFileSync('reports/workspace-address-check.json',JSON.stringify(checks,null,2))}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

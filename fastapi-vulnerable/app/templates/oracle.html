@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% block title %}수정구슬 · 달빛 고양이{% endblock %}{% block content %}
+<section class="oracle-layout"><div class="oracle-copy"><span class="eyebrow">CRYSTAL ORACLE</span><h1>수정구슬로<br>먼 곳을 들여다봐요.</h1><p>궁금한 주소를 적으면 타로 고양이가 그곳의 첫 장면을 보여드려요.</p><div class="orb">☾</div></div><div class="form-card"><form method="get"><label>들여다볼 주소<input type="url" name="url" value="{{ url|safe }}" placeholder="http://example.com" required></label><button class="button primary wide">수정구슬 비추기</button></form>{% if error %}<div class="alert">{{ error|safe }}</div>{% endif %}{% if result %}<pre class="oracle-result">{{ result|safe }}</pre>{% endif %}</div></section>
+{% endblock %}

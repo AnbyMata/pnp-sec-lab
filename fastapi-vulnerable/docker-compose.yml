@@ -1,0 +1,40 @@
+services:
+  web:
+    build: .
+    container_name: mooncat_vulnerable_web
+    ports:
+      - "8081:8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: mooncat
+      DB_USER: mooncat
+      DB_PASSWORD: mooncat123
+    volumes:
+      - uploads:/app/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11.4
+    container_name: mooncat_vulnerable_db
+    environment:
+      MARIADB_ROOT_PASSWORD: root1234
+      MARIADB_DATABASE: mooncat
+      MARIADB_USER: mooncat
+      MARIADB_PASSWORD: mooncat123
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads:

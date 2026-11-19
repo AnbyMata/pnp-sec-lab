@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}달빛 고양이 아틀리에{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <div class="glow glow-one"></div><div class="glow glow-two"></div>
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-moon">☾</span><span>달빛 고양이 아틀리에</span></a>
+    <nav>
+      <a href="/">홈</a><a href="/board">별빛 게시판</a><a href="/oracle">수정구슬</a>
+      {% if session.get('user_id') %}{% if session.get('user_id') == 'admin' %}<a href="/admin">관리자</a>{% endif %}<a href="/profile">{{ session.get('nickname')|safe }}의 방</a><a class="nav-pill" href="/logout">로그아웃</a>
+      {% else %}<a href="/login">로그인</a><a class="nav-pill" href="/register">회원가입</a>{% endif %}
+    </nav>
+  </header>
+  <main class="page-shell">{% block content %}{% endblock %}</main>
+  <footer><span>✦ 달빛 아래에서 만나는 작은 이야기들 ✦</span></footer>
+</body>
+</html>

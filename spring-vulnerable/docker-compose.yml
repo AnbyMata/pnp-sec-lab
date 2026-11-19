@@ -1,0 +1,39 @@
+services:
+  web:
+    build: .
+    container_name: mooncat_spring_vulnerable_web
+    ports:
+      - "8082:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: mooncat_spring
+      DB_USER: mooncat
+      DB_PASSWORD: mooncat123
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  db:
+    image: mariadb:11.4
+    container_name: mooncat_spring_vulnerable_db
+    environment:
+      MARIADB_ROOT_PASSWORD: root1234
+      MARIADB_DATABASE: mooncat_spring
+      MARIADB_USER: mooncat
+      MARIADB_PASSWORD: mooncat123
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+volumes:
+  db_data:
+  uploads:

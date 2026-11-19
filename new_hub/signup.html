@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f6"><title>회원가입 | PNP Security Lab</title>
+  <link rel="stylesheet" href="login.css"><link rel="stylesheet" href="signup.css">
+</head>
+<body>
+<main class="page">
+  <header class="header"><span class="header-name">PNP <span>SECURITY LAB</span></span><span class="header-label">LEARN · PRACTICE · GROW</span></header>
+  <section class="login signup-page" aria-labelledby="signup-title">
+    <div class="brand"><img src="pnp-logo-transparent.png" alt="PNP Passion Pioneer 로고"><span class="brand-line" aria-hidden="true"></span><p>PNP <strong>SECURITY LAB</strong></p></div>
+    <div class="intro"><p class="eyebrow"><span></span> REQUEST ACCESS</p><h1 id="signup-title">가입을 신청해요<span>.</span></h1><p>학교 이메일 인증 후 관리자 승인까지 완료되면 로그인할 수 있습니다.</p></div>
+    <form id="signup-form">
+      <label for="name">닉네임</label><input id="name" name="name" type="text" placeholder="사용할 닉네임을 입력해 주세요" autocomplete="nickname" required>
+      <label for="email">학교 이메일</label><div class="input-action"><input id="email" name="email" type="email" placeholder="학교 이메일을 입력해 주세요" autocomplete="email" required><button type="button" id="send-code">인증번호 받기</button></div>
+      <p class="field-help">학교에서 발급받은 이메일을 사용해 주세요.</p>
+      <label for="code">인증 코드</label><div class="input-action"><input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="이메일로 받은 인증 코드" required><button type="button" id="verify-code">인증 확인</button></div>
+      <label for="password">비밀번호</label><div class="password-field"><input id="password" name="password" type="password" placeholder="비밀번호를 입력해 주세요" autocomplete="new-password" required><button class="show-password" type="button" aria-label="비밀번호 표시" aria-pressed="false">보기</button></div>
+      <label for="password-confirm">비밀번호 확인</label><input id="password-confirm" name="password-confirm" type="password" placeholder="비밀번호를 다시 입력해 주세요" autocomplete="new-password" required>
+      <button class="submit" type="submit">가입 신청 <span aria-hidden="true">↗</span></button>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+    </form>
+<div class="approval-flow" aria-label="가입 승인 절차"><span>01 이메일 인증</span><b>→</b><span>02 관리자 승인</span><b>→</b><span>03 로그인</span></div><div class="signup">이미 계정이 있으신가요? <a href="login.html">로그인 <span aria-hidden="true">→</span></a></div>
+  </section>
+  <footer><span>© PNP SECURITY LAB</span><span>PASSION. PIONEER. PRACTICE.</span></footer>
+</main><script src="signup.js"></script>
+</body></html>
+

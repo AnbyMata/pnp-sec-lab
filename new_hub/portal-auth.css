@@ -1,0 +1,7 @@
+[hidden]{display:none!important}
+.topbar .avatar{width:40px;height:40px;flex-shrink:0;background:#eee;border-radius:50%;display:grid;place-items:center}
+.topbar .avatar img{width:32px;height:32px;display:block;object-fit:contain;border-radius:6px}
+.topbar .account.active,.topbar .account.active .avatar,.topbar .account img{background:transparent;box-shadow:none}
+.topbar .account>span:not(.avatar):not([aria-hidden]){color:#1a1a1a}
+#portal-logout{border:0;background:transparent;color:#777;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.topbar:has(#portal-logout){column-gap:24px}

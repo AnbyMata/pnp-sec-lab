@@ -1,0 +1,24 @@
+# Local secrets and environment-specific settings
+.env
+.env.*
+!.env.example
+
+# Runtime data
+fastapi-vulnerable/app/uploads/
+src/board/upload/
+
+# Local archives, diagnostics, and generated test reports
+backups/
+extracted/
+reports/
+debug.log
+*.zip
+*.tar.gz
+
+# Language and editor artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+.vscode/
+.idea/

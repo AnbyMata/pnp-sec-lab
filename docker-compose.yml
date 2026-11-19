@@ -1,0 +1,89 @@
+name: webtestsite_unified
+services:
+  nginx:
+    image: nginx:alpine
+    ports: ["127.0.0.1:8000:80"]
+    volumes:
+      - ./new_hub:/usr/share/nginx/html:ro
+      - ./hub/lab:/opt/pnp-lab:ro
+      - ./hub/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  manager:
+    build: ./hub/manager
+    working_dir: /workspace
+    environment:
+      COMPOSE_PROJECT_NAME: webtestsite_unified
+    volumes:
+      - .:/workspace:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+  php:
+    build: .
+    networks: [default, lab]
+    volumes:
+      - ./src/board/upload:/var/www/html/board/upload
+      - ./shared/style.css:/var/www/html/shared/style.css:ro
+    ports: ["127.0.0.1:10001:80"]
+    depends_on:
+      db:
+        condition: service_healthy
+  python:
+    build: ./fastapi-vulnerable
+    env_file: .env
+    networks: [default, lab]
+    ports: ["127.0.0.1:10002:8000"]
+    environment:
+      DB_HOST: db
+      DB_NAME: WebTest
+      DB_USER: mooncat
+      DB_PASSWORD: mooncat123
+    volumes:
+      - ./src/board/upload:/app/app/uploads
+      - ./shared/style.css:/app/app/static/style.css:ro
+    depends_on:
+      db:
+        condition: service_healthy
+  spring:
+    build: ./spring-vulnerable
+    networks: [default, lab]
+    ports: ["127.0.0.1:10003:8080"]
+    environment:
+      DB_HOST: db
+      DB_NAME: WebTest
+      DB_USER: mooncat
+      DB_PASSWORD: mooncat123
+      UPLOAD_DIR: /app/uploads
+      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/app/shared/,classpath:/static/"
+    volumes:
+      - ./src/board/upload:/app/uploads
+      - ./shared/style.css:/app/shared/style.css:ro
+    depends_on:
+      db:
+        condition: service_healthy
+  shell:
+    build: ./hub/shell
+    networks: [lab]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m", "/home/student:rw,nosuid,size=32m,uid=1000,gid=1000"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    pids_limit: 64
+  db:
+    image: mariadb:11.4
+    ports: ["127.0.0.1:13306:3306"]
+    environment:
+      MARIADB_ROOT_PASSWORD: "P@ssw0rd"
+    volumes:
+      - unified_db:/var/lib/mysql
+      - ./unified-init:/docker-entrypoint-initdb.d:ro
+      - ./db-init/01-webtest.sql:/schemas/php.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+volumes:
+  unified_db:
+networks:
+  lab:
+    internal: true
+
