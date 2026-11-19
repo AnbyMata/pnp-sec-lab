@@ -18,8 +18,7 @@ setText('#challenge-title', challenge.title);
 setText('.eyebrow', `CHALLENGE ${String(window.pnpChallenges.indexOf(challenge) + 1).padStart(2, '0')} / ${challenge.category}`);
 setText('.problem h2', challenge.mission);
 setText('.description', challenge.description);
-setText('.disclosures details:first-child p', challenge.hint);
-setText('.disclosures details:last-child p', challenge.theory);
+setText('#theory-text', challenge.theory);
 setText('.lab-header h2', `${challenge.category} 실습 환경`);
 setText('.badges span:first-child', challenge.level);
 setText('.badges span:nth-child(2)', challenge.category);
@@ -31,6 +30,21 @@ document.querySelector('.disclosures details:last-child').append(theoryLink);
 setText('.browser-bar .address', challenge.labUrl);
 document.querySelector('.target-note').textContent = '이 문제의 플래그는 Python 실습 사이트에만 준비되어 있습니다. 실습 환경에서 찾아 제출해 주세요.';
 document.querySelector('.flag-note').textContent = '최종 플래그 하나를 제출하면 해결 기록이 현재 브라우저에 저장됩니다.';
+
+const hintList = document.querySelector('#hint-list');
+const hintItems = Array.isArray(challenge.hints) && challenge.hints.length ? challenge.hints : [challenge.hint];
+hintItems.forEach((text, index) => {
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.textContent = hintItems.length > 1 ? `힌트 ${index + 1} ` : '힌트 보기 ';
+  const marker = document.createElement('span');
+  marker.textContent = '+';
+  summary.append(marker);
+  const body = document.createElement('p');
+  body.textContent = text;
+  details.append(summary, body);
+  hintList.append(details);
+});
 
 const frame = document.querySelector('#lab-frame');
 frame.src = challenge.labUrl;
@@ -62,21 +76,59 @@ function selectTab(tab) {
     document.querySelector(`#panel-${item.dataset.panel}`).hidden = !selected;
   });
 }
-tabs.forEach((tab, index) => {
+tabs.forEach((tab) => {
   tab.addEventListener('click', () => selectTab(tab));
   tab.addEventListener('keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-    selectTab(tabs[next]);
-    tabs[next].focus();
+    const navTabs = tabs.filter((item) => !item.hidden);
+    const index = navTabs.indexOf(tab);
+    if (index === -1) return;
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? navTabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + navTabs.length) % navTabs.length;
+    selectTab(navTabs[next]);
+    navTabs[next].focus();
   });
 });
+
+// Tool tabs (data-tool="<name>") mount only when the challenge declares the
+// tool and it is registered in window.pnpTools; otherwise they stay hidden.
+tabs.filter((tab) => tab.dataset.tool).forEach((tab) => {
+  const name = tab.dataset.tool;
+  const panel = document.getElementById(tab.getAttribute('aria-controls'));
+  const declared = Array.isArray(challenge.tools) && challenge.tools.includes(name);
+  const mounted = declared && window.pnpTools && window.pnpTools.mountTool(name, panel, challenge);
+  if (!mounted) {
+    tab.hidden = true;
+    if (panel) panel.hidden = true;
+  }
+});
+
+// Server-side tool gates (GET /api/config -> tools.<key>): a tool tab is
+// hidden whenever its gate is exactly false. Gate keys can differ from tool
+// names — the lab shell gates the terminal tab, the attacker service gates
+// the exploit-server tab.
+const TOOL_GATE = { terminal: 'shell', 'exploit-server': 'attacker' };
+fetch('/api/config')
+  .then((response) => (response.ok ? response.json() : {}))
+  .catch(() => ({}))
+  .then((config) => {
+    const gates = (config && config.tools) || {};
+    tabs.forEach((tab) => {
+      const tool = tab.dataset.tool;
+      if (!tool) return;
+      const key = Object.prototype.hasOwnProperty.call(TOOL_GATE, tool) ? TOOL_GATE[tool] : tool;
+      if (gates[key] !== false) return;
+      tab.hidden = true;
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      if (panel) panel.hidden = true;
+    });
+  });
 
 const solvedKey = 'pnp_completed_challenges';
 const readSolved = () => { try { const saved = JSON.parse(localStorage.getItem(solvedKey) || '[]'); return Array.isArray(saved) ? saved : []; } catch { return []; } };
 const showSolved = () => {
-  document.querySelector('.bar-status').innerHTML = '<i></i> 해결 완료';
+  const status = document.querySelector('.bar-status');
+  status.replaceChildren(document.createElement('i'), document.createTextNode(' 해결 완료'));
   document.querySelector('.badges .unsolved').textContent = '해결 완료';
 };
 if (readSolved().includes(challenge.id)) showSolved();
@@ -101,7 +153,7 @@ document.querySelector('#flag-form').addEventListener('submit', async (event) =>
     if (result.correct) {
       const solved = readSolved();
       if (!solved.includes(challenge.id)) localStorage.setItem(solvedKey, JSON.stringify([...solved, challenge.id]));
-      notice.textContent = '정답입니다! 챌린지 해결 기록이 내 계정에 저장되었습니다.';
+      notice.textContent = '정답입니다! 챌린지 해결 기록이 이 브라우저에 저장되었습니다.';
       showSolved();
     } else {
       notice.textContent = '플래그가 일치하지 않습니다. 다시 확인해 주세요.';
@@ -115,6 +167,9 @@ document.querySelector('#flag-form').addEventListener('submit', async (event) =>
 
 document.querySelector('#toggle-panel').addEventListener('click', (event) => {
   const collapsed = document.querySelector('#workspace').classList.toggle('collapsed');
-  event.currentTarget.setAttribute('aria-expanded', String(!collapsed));
-  event.currentTarget.innerHTML = collapsed ? '문제 펼치기 <span>›</span>' : '문제 접기 <span>‹</span>';
+  const button = event.currentTarget;
+  button.setAttribute('aria-expanded', String(!collapsed));
+  const marker = document.createElement('span');
+  marker.textContent = collapsed ? '›' : '‹';
+  button.replaceChildren(document.createTextNode(collapsed ? '문제 펼치기 ' : '문제 접기 '), marker);
 });

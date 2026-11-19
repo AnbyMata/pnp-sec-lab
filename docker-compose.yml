@@ -2,6 +2,7 @@ name: webtestsite_unified
 services:
   nginx:
     image: nginx:alpine
+    networks: [default, lab]
     ports: ["127.0.0.1:8000:80"]
     volumes:
       - ./new_hub:/usr/share/nginx/html:ro
@@ -12,6 +13,7 @@ services:
     working_dir: /workspace
     environment:
       COMPOSE_PROJECT_NAME: webtestsite_unified
+      PNP_MODE: ${PNP_MODE:-dev}
     volumes:
       - .:/workspace:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -36,6 +38,7 @@ services:
       DB_USER: mooncat
       DB_PASSWORD: mooncat123
       MONGO_URI: mongodb://mongo:27017
+      PNP_MODE: ${PNP_MODE:-dev}
     volumes:
       - ./src/board/upload:/app/app/uploads
       - ./shared/style.css:/app/app/static/style.css:ro
@@ -61,6 +64,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  tools-proxy:
+    build: ./tools-proxy
+    networks: [lab]
+    environment:
+      PNP_ORIGINS: ${PNP_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+  attacker:
+    build: ./attacker
+    networks: [default, lab]
+    environment:
+      PNP_MODE: ${PNP_MODE:-dev}
+      PNP_ORIGINS: ${PNP_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      ATTACKER_PAGE_TTL: ${ATTACKER_PAGE_TTL:-7200}
+    ports: ["127.0.0.1:10010:8000"]
   shell:
     build: ./hub/shell
     networks: [lab]

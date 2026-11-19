@@ -1,6 +1,12 @@
 import os
 import hmac
 import shutil
+import base64
+import time
+from collections import deque
+from contextvars import ContextVar
+from datetime import datetime, timezone
+from itertools import count
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -26,6 +32,7 @@ IDOR_FLAG = os.getenv("IDOR_LAB_FLAG", "PNP{lab_flag_not_configured}")
 TRAVERSAL_FLAG = os.getenv("TRAVERSAL_LAB_FLAG", "PNP{lab_flag_not_configured}")
 XSS_FLAG = os.getenv("XSS_LAB_FLAG", "PNP{lab_flag_not_configured}")
 SSRF_FLAG = os.getenv("SSRF_LAB_FLAG", "PNP{lab_flag_not_configured}")
+PNP_MODE = os.getenv("PNP_MODE", "dev")
 from .lab_routes import router as lab_router, start_receiver, stop_receiver
 from .server_challenges import router as server_router, initialize as initialize_challenges, FLAGS as SERVER_FLAGS
 app.include_router(lab_router)
@@ -48,12 +55,71 @@ def db():
     )
 
 
+# DEV ONLY (PNP_MODE != "prod"): records executed SQL verbatim, which can
+# include student passwords typed into the intentionally vulnerable forms.
+# The buffer never leaves the lab network and /lab/querylog returns 404 in prod.
+QUERY_LOG = deque(maxlen=50)
+QUERY_SEQ = count(1)
+
+# Request path/method for the log entry; set by middleware below. Sync DB
+# helpers run in FastAPI's thread pool, which copies contextvars — the value
+# set here is visible inside fetch_one/fetch_all/execute ("" when absent).
+REQUEST_CTX = ContextVar("request_ctx", default=None)
+
+
+@app.middleware("http")
+async def request_context(request: Request, call_next):
+    REQUEST_CTX.set({"path": request.url.path, "method": request.method})
+    return await call_next(request)
+
+
+def log_event(kind: str, **fields):
+    # Shared event buffer for query + non-query events. Logging failures must
+    # never change endpoint behaviour.
+    if PNP_MODE == "prod":
+        return
+    try:
+        ctx = REQUEST_CTX.get()
+        if ctx and ctx["path"] == "/lab/echo":
+            return
+        entry = {
+            "seq": next(QUERY_SEQ),
+            "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "kind": kind,
+            "path": ctx["path"] if ctx else "",
+            "method": ctx["method"] if ctx else "",
+        }
+        entry.update(fields)
+        # detail is user-controlled (file name / URL) — keep it a short string.
+        # query entries keep full `sql` verbatim, so only `detail` is bounded.
+        if isinstance(entry.get("detail"), str):
+            entry["detail"] = entry["detail"][:300]
+        QUERY_LOG.append(entry)
+    except Exception:
+        pass
+
+
+def log_query(sql: str, rows=None, error=None):
+    log_event(
+        "query",
+        time=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        sql=sql,
+        rows=rows,
+        error=error,
+    )
+
+
 def fetch_one(sql: str):
     conn = db()
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
-            return cur.fetchone()
+            row = cur.fetchone()
+        log_query(sql, rows=1 if row else 0)
+        return row
+    except Exception as exc:
+        log_query(sql, error=str(exc))
+        raise
     finally:
         conn.close()
 
@@ -63,7 +129,12 @@ def fetch_all(sql: str):
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
-            return cur.fetchall()
+            rows = cur.fetchall()
+        log_query(sql, rows=len(rows))
+        return rows
+    except Exception as exc:
+        log_query(sql, error=str(exc))
+        raise
     finally:
         conn.close()
 
@@ -73,7 +144,12 @@ def execute(sql: str):
     try:
         with conn.cursor() as cur:
             cur.execute(sql)
-            return cur.lastrowid
+            result = cur.lastrowid
+        log_query(sql, rows=cur.rowcount)
+        return result
+    except Exception as exc:
+        log_query(sql, error=str(exc))
+        raise
     finally:
         conn.close()
 
@@ -86,6 +162,40 @@ def page(request: Request, template: str, **context):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/lab/querylog")
+def lab_querylog(paths: str = "", limit: int = 5, kinds: str = ""):
+    # DEV ONLY: plaintext event/query log (see QUERY_LOG comment); disabled in prod.
+    if PNP_MODE == "prod":
+        raise HTTPException(status_code=404, detail="Not found")
+    entries = list(QUERY_LOG)
+    if kinds:
+        wanted_kinds = set(k for k in kinds.split(",") if k)
+        entries = [e for e in entries if e.get("kind") in wanted_kinds]
+    if not paths:
+        return {"entries": entries[-20:][::-1], "total": len(entries)}
+    wanted = set(paths.split(","))
+    filtered = [e for e in entries if e["path"] in wanted]
+    limit = max(1, min(20, limit))
+    return {"entries": filtered[-limit:][::-1], "total": len(filtered)}
+
+
+@app.api_route("/lab/echo", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def lab_echo(request: Request):
+    # DEV ONLY target for the request workbench (W1); disabled in prod.
+    if PNP_MODE == "prod":
+        raise HTTPException(status_code=404, detail="Not found")
+    body = await request.body()
+    return {
+        "method": request.method,
+        "path": request.url.path,
+        "query": request.url.query,
+        "headers": dict(request.headers),
+        "body_len": len(body),
+        "body_b64": base64.b64encode(body[: 64 * 1024]).decode("ascii"),
+        "received_at": time.time(),
+    }
 
 
 @app.get("/lab/session")
@@ -160,9 +270,14 @@ def lab_file(name: str = "welcome.txt"):
     # Deliberate traversal within a synthetic lab directory; never expose real files.
     root = (BASE_DIR / "lab_files").resolve()
     target = (root / "public" / name).resolve()
-    if not target.is_relative_to(root) or not target.is_file():
+    if not target.is_relative_to(root):
+        log_event("file", detail=name, ok=False, note="denied")
+        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다")
+    if not target.is_file():
+        log_event("file", detail=name, ok=False, note="not-found")
         raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다")
     content = target.read_text(encoding="utf-8")
+    log_event("file", detail=name, ok=True, note="ok")
     if target == (root / "private" / "note.txt"):
         content += f"\n{TRAVERSAL_FLAG}\n"
     return content
@@ -350,6 +465,8 @@ def oracle_form(request: Request, url: str = ""):
         try:
             response = requests.get(url, timeout=4, headers={"X-PNP-Lab-Oracle": "1"})
             result = response.text[:5000]
+            log_event("http-out", detail=url, ok=True, note=f"status {response.status_code}")
         except Exception as exc:
             error = str(exc)
+            log_event("http-out", detail=url, ok=False, note=error[:200])
     return page(request, "oracle.html", url=url, result=result, error=error)
