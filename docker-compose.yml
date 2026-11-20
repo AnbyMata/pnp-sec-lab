@@ -9,14 +9,26 @@ services:
       - ./hub/lab:/opt/pnp-lab:ro
       - ./hub/nginx.conf:/etc/nginx/conf.d/default.conf:ro
   manager:
+    networks: [default, ingress]
+    env_file: .env
     build: ./hub/manager
     working_dir: /workspace
     environment:
+      PNP_MANAGED_LABS: ${PNP_MANAGED_LABS:-true}
+      PNP_LAB_DOMAIN: ${PNP_LAB_DOMAIN:-labs.localhost}
+      PNP_LAB_SCHEME: ${PNP_LAB_SCHEME:-http}
+      PNP_LAB_PORT: ${PNP_LAB_PORT-8000}
+      PNP_COOKIE_SECURE: ${PNP_COOKIE_SECURE:-false}
+      PNP_MAX_SESSIONS: ${PNP_MAX_SESSIONS:-5}
+      PNP_INGRESS_NETWORK: ${PNP_INGRESS_NETWORK:-pnp-lab-ingress}
+      PNP_ORIGINS: ${PNP_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      PNP_AUTH_PROXY_HOST: nginx
       COMPOSE_PROJECT_NAME: webtestsite_unified
       PNP_MODE: ${PNP_MODE:-dev}
     volumes:
       - .:/workspace:ro
       - /var/run/docker.sock:/var/run/docker.sock
+      - lab_sessions:/state
   php:
     build: .
     networks: [default, lab]
@@ -111,9 +123,13 @@ services:
       timeout: 5s
       retries: 30
 volumes:
+  lab_sessions:
   unified_db:
   mongo_test:
 networks:
+  ingress:
+    name: ${PNP_INGRESS_NETWORK:-pnp-lab-ingress}
+    internal: true
   lab:
     internal: true
 

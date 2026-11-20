@@ -23,15 +23,16 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="Mooncat Atelier")
-app.add_middleware(SessionMiddleware, secret_key="mooncat-secret-1234", same_site="lax")
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("PNP_SESSION_SECRET", "mooncat-secret-1234"), same_site="lax")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
-SQLI_FLAG = os.getenv("SQLI_LAB_FLAG", "PNP{lab_flag_not_configured}")
-IDOR_FLAG = os.getenv("IDOR_LAB_FLAG", "PNP{lab_flag_not_configured}")
-TRAVERSAL_FLAG = os.getenv("TRAVERSAL_LAB_FLAG", "PNP{lab_flag_not_configured}")
-XSS_FLAG = os.getenv("XSS_LAB_FLAG", "PNP{lab_flag_not_configured}")
-SSRF_FLAG = os.getenv("SSRF_LAB_FLAG", "PNP{lab_flag_not_configured}")
+from .challenge_flags import flag_for
+SQLI_FLAG = flag_for("sqli-login", "SQLI_LAB_FLAG", "PNP{lab_flag_not_configured}")
+IDOR_FLAG = flag_for("idor-profile", "IDOR_LAB_FLAG", "PNP{lab_flag_not_configured}")
+TRAVERSAL_FLAG = flag_for("path-traversal", "TRAVERSAL_LAB_FLAG", "PNP{lab_flag_not_configured}")
+XSS_FLAG = flag_for("reflected-xss", "XSS_LAB_FLAG", "PNP{lab_flag_not_configured}")
+SSRF_FLAG = flag_for("ssrf-oracle", "SSRF_LAB_FLAG", "PNP{lab_flag_not_configured}")
 PNP_MODE = os.getenv("PNP_MODE", "dev")
 from .lab_routes import router as lab_router, start_receiver, stop_receiver
 from .server_challenges import router as server_router, initialize as initialize_challenges, FLAGS as SERVER_FLAGS
@@ -215,6 +216,8 @@ def admin_lab(request: Request):
 
 @app.post("/lab/challenges/sqli-login/verify")
 async def verify_sqli_flag(request: Request):
+    if not SQLI_FLAG:
+        raise HTTPException(status_code=404, detail="이 환경에서는 해당 플래그가 비활성화되어 있습니다")
     try:
         data = await request.json()
     except ValueError:
@@ -262,7 +265,7 @@ def lab_profile(request: Request, user_id: str = ""):
     if not user:
         raise HTTPException(status_code=404, detail="회원을 찾을 수 없습니다")
     result = {"profile": user, "viewer": request.session["user_id"]}
-    if user_id == "admin":
+    if user_id == "admin" and IDOR_FLAG:
         result["lab_note"] = IDOR_FLAG
     return result
 
@@ -280,7 +283,7 @@ def lab_file(name: str = "welcome.txt"):
         raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다")
     content = target.read_text(encoding="utf-8")
     log_event("file", detail=name, ok=True, note="ok")
-    if target == (root / "private" / "note.txt"):
+    if target == (root / "private" / "note.txt") and TRAVERSAL_FLAG:
         content += f"\n{TRAVERSAL_FLAG}\n"
     return content
 
@@ -292,7 +295,7 @@ def xss_preview(message: str = ""):
         "<!doctype html><meta charset='utf-8'><title>방명록 미리보기</title>"
         "<h1>방명록 미리보기</h1><p>입력한 문장이 그대로 표시됩니다.</p>"
         f"<div class='message'>{message}</div>"
-        f"<!-- review-note: {XSS_FLAG} -->"
+        + (f"<!-- review-note: {XSS_FLAG} -->" if XSS_FLAG else "")
     )
 
 

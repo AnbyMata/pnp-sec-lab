@@ -1,5 +1,6 @@
 """Shared test environment for the three additional Server-side challenges."""
 import hmac
+from .challenge_flags import flag_for
 import os
 import secrets
 from pathlib import Path
@@ -13,10 +14,10 @@ from fastapi.templating import Jinja2Templates
 
 router = APIRouter(prefix="/lab")
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
-FLAGS = {key: os.getenv(env) or f"PNP{{{secrets.token_hex(20)}}}" for key, env in {
+FLAGS = {key: flag_for(key, env, f"PNP{{{secrets.token_hex(20)}}}") for key, env in {
     "auth-recovery": "AUTH_LAB_FLAG", "upload-filter": "UPLOAD_LAB_FLAG", "nosql-login": "NOSQL_LAB_FLAG"
 }.items()}
-mongo = MongoClient(os.getenv("MONGO_URI", "mongodb://mongo:27017"), serverSelectionTimeoutMS=5000)
+mongo = MongoClient(os.getenv("MONGO_URI", "mongodb://mongo:27017"), serverSelectionTimeoutMS=5000, connect=False)
 
 
 def connection():
@@ -101,5 +102,5 @@ async def nosql_login(request: Request):
         raise HTTPException(400, "지원하지 않는 검색 조건입니다.")
     if not account:
         return {"authenticated": False, "message": "인증에 실패했습니다."}
-    return {"authenticated": True, "username": account["username"], "flag": FLAGS["nosql-login"]}
+    return {"authenticated": True, "username": account["username"], **({"flag": FLAGS["nosql-login"]} if FLAGS["nosql-login"] else {})}
 

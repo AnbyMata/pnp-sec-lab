@@ -1,0 +1,264 @@
+{
+  "services": {
+    "db": {
+      "networks": [
+        "private"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "pnp-lab-db:latest",
+      "build": {
+        "context": "..",
+        "dockerfile": "hub/session-db.Dockerfile"
+      },
+      "mem_limit": "512m",
+      "environment": {
+        "MARIADB_ROOT_PASSWORD": "${PNP_DB_ROOT_PASSWORD:?Set PNP_DB_ROOT_PASSWORD}"
+      },
+      "volumes": [
+        "db-data:/var/lib/mysql"
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "healthcheck.sh",
+          "--connect",
+          "--innodb_initialized"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 30
+      }
+    },
+    "mongo": {
+      "networks": [
+        "private"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "mongo:7.0",
+      "mem_limit": "384m",
+      "volumes": [
+        "mongo-data:/data/db"
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--eval",
+          "db.adminCommand('ping').ok"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 30
+      }
+    },
+    "python": {
+      "networks": [
+        "private"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "pnp-lab-python:latest",
+      "build": "../fastapi-vulnerable",
+      "mem_limit": "256m",
+      "environment": {
+        "DB_HOST": "db",
+        "DB_NAME": "WebTest",
+        "DB_USER": "mooncat",
+        "DB_PASSWORD": "mooncat123",
+        "PNP_SESSION_SECRET": "${PNP_SESSION_SECRET:-build-only-placeholder}",
+        "MONGO_URI": "mongodb://mongo:27017",
+        "PNP_MODE": "${PNP_MODE:-dev}",
+        "SQLI_LAB_FLAG": "${SQLI_LAB_FLAG:?Configure SQLI_LAB_FLAG}",
+        "IDOR_LAB_FLAG": "${IDOR_LAB_FLAG:?Configure IDOR_LAB_FLAG}",
+        "TRAVERSAL_LAB_FLAG": "${TRAVERSAL_LAB_FLAG:?Configure TRAVERSAL_LAB_FLAG}",
+        "XSS_LAB_FLAG": "${XSS_LAB_FLAG:?Configure XSS_LAB_FLAG}",
+        "SSRF_LAB_FLAG": "${SSRF_LAB_FLAG:?Configure SSRF_LAB_FLAG}",
+        "AUTH_LAB_FLAG": "${AUTH_LAB_FLAG:?Configure AUTH_LAB_FLAG}",
+        "UPLOAD_LAB_FLAG": "${UPLOAD_LAB_FLAG:?Configure UPLOAD_LAB_FLAG}",
+        "NOSQL_LAB_FLAG": "${NOSQL_LAB_FLAG:?Configure NOSQL_LAB_FLAG}"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        },
+        "mongo": {
+          "condition": "service_healthy"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 30
+      },
+      "command": [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--proxy-headers",
+        "--forwarded-allow-ips=*"
+      ]
+    },
+    "shell": {
+      "networks": [
+        "private"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "pnp-lab-shell:latest",
+      "build": "./shell",
+      "mem_limit": "128m",
+      "read_only": true,
+      "tmpfs": [
+        "/tmp:rw,noexec,nosuid,size=32m",
+        "/home/student:rw,nosuid,size=32m,uid=1000,gid=1000"
+      ],
+      "cap_drop": [
+        "ALL"
+      ]
+    },
+    "gateway": {
+      "networks": {
+        "private": {},
+        "ingress": {
+          "aliases": [
+            "pnp-gateway-${PNP_SESSION_ID:?}"
+          ]
+        }
+      },
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "pnp-lab-gateway:latest",
+      "build": {
+        "context": "..",
+        "dockerfile": "hub/session-gateway.Dockerfile"
+      },
+      "mem_limit": "64m",
+      "depends_on": [
+        "python",
+        "php",
+        "spring"
+      ]
+    },
+    "php": {
+      "networks": [
+        "private"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "pnp-lab-php:latest",
+      "build": "..",
+      "mem_limit": "192m",
+      "environment": {
+        "DB_HOST": "db",
+        "DB_NAME": "WebTest",
+        "DB_USER": "mooncat",
+        "DB_PASSWORD": "mooncat123"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "php",
+          "-r",
+          "exit(@file_get_contents('http://127.0.0.1/') === false ? 1 : 0);"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 30
+      }
+    },
+    "spring": {
+      "networks": [
+        "private"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 128,
+      "cpus": 0.5,
+      "restart": "no",
+      "image": "pnp-lab-spring:latest",
+      "build": "../spring-vulnerable",
+      "mem_limit": "512m",
+      "environment": {
+        "DB_HOST": "db",
+        "DB_NAME": "WebTest",
+        "DB_USER": "mooncat",
+        "DB_PASSWORD": "mooncat123",
+        "UPLOAD_DIR": "/app/uploads",
+        "JAVA_TOOL_OPTIONS": "-Xmx320m",
+        "SERVER_FORWARD_HEADERS_STRATEGY": "framework",
+        "SERVER_SERVLET_SESSION_TRACKING_MODES": "cookie"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "bash",
+          "-c",
+          "echo > /dev/tcp/127.0.0.1/8080"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 30
+      }
+    }
+  },
+  "networks": {
+    "private": {
+      "internal": true
+    },
+    "ingress": {
+      "external": true,
+      "name": "${PNP_INGRESS_NETWORK:-pnp-lab-ingress}"
+    }
+  },
+  "volumes": {
+    "db-data": {},
+    "mongo-data": {}
+  }
+}

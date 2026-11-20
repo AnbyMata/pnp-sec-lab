@@ -40,7 +40,7 @@ try {
  if (!in_array($action,array('wallet','orders','inventory','quote','purchase'),true)) throw new Exception('API를 찾을 수 없습니다.',404);
  if (empty($_SESSION['user_id'])) throw new Exception('로그인이 필요합니다.',401);
  $uid=$_SESSION['user_id']; session_write_close();
- $shopDb=new mysqli('db','root','P@ssw0rd','WebTest');
+ $shopDb=new mysqli(getenv('DB_HOST') ?: 'db',getenv('DB_USER') ?: 'root',getenv('DB_PASSWORD') ?: 'P@ssw0rd',getenv('DB_NAME') ?: 'WebTest');
  if ($shopDb->connect_error) throw new Exception('상점 DB 연결 오류입니다.',500);
  $shopDb->set_charset('utf8mb4');
  $shopDb->autocommit(false);

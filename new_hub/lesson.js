@@ -20,6 +20,7 @@ if (!lesson) {
   document.querySelector('#title').textContent = '학습 주제를 찾을 수 없습니다.';
   document.querySelector('.lesson-layout').hidden = true;
 } else {
+  window.PnpAuth.ready.then(() => {
   document.title = `${lesson.name} | PNP Security Lab`;
   document.querySelector('#title').textContent = lesson.name;
   document.querySelector('#description').textContent = lesson.sub;
@@ -50,18 +51,19 @@ if (!lesson) {
     completeButton.textContent = completed ? '학습 완료 취소' : '학습 완료';
     completeNote.textContent = completed ? '이 에피소드를 완료했어요. 다시 누르면 완료가 취소됩니다.' : '완료하면 내 계정의 학습 기록에 반영됩니다.';
   }
-  completeButton.addEventListener('click', () => {
+  completeButton.addEventListener('click', async () => {
     if (localStorage.getItem('pnp_authenticated') !== 'true') {
       completeNote.textContent = '학습 완료 기록은 로그인 후 저장할 수 있습니다.';
       return;
     }
     const key = progressKey();
     const completed = readProgress('pnp_completed_lessons');
-    const next = completed.includes(key) ? completed.filter((item) => item !== key) : [...completed, key];
-    localStorage.setItem('pnp_completed_lessons', JSON.stringify(next));
-    const started = readProgress('pnp_started_lessons');
-    if (!started.includes(key)) localStorage.setItem('pnp_started_lessons', JSON.stringify([...started, key]));
-    updateCompletion();
+    completeButton.disabled=true;
+    try {
+      await window.PnpProgress.record('lesson',key,!completed.includes(key));
+      updateCompletion();
+    } catch(error) { completeNote.textContent=error.message; }
+    finally {completeButton.disabled=false;}
   });
   nextButton.addEventListener('click', () => {
     render(activeTopic + 1);
@@ -81,6 +83,7 @@ if (!lesson) {
       const key = progressKey();
       const started = readProgress('pnp_started_lessons').filter((item) => item !== key);
       localStorage.setItem('pnp_started_lessons', JSON.stringify([...started, key]));
+      if(lesson.id==='sql-injection' && topic<4) window.PnpProgress.record('started',key,true).catch(error=>{completeNote.textContent=error.message;});
     }
     nextButton.hidden = topic >= lesson.types.length - 1;
     nextButton.textContent = `EP.${topic + 2} →`;
@@ -112,7 +115,12 @@ if (!lesson) {
       body.querySelectorAll('pre.sql code, pre[data-ke-language="sql"] code').forEach(highlightSql);
     }
     updateCompletion();
+    if(lesson.id!=='sql-injection' || topic>=4) {
+      completeButton.disabled=true;
+      completeNote.textContent='준비 중인 에피소드는 학습 진도율에 포함되지 않습니다.';
+    } else completeButton.disabled=false;
   }
   const requestedEpisode = Number(new URLSearchParams(location.search).get('episode'));
   render(Number.isInteger(requestedEpisode) && requestedEpisode >= 1 && requestedEpisode <= lesson.types.length ? requestedEpisode - 1 : 0);
+  });
 }

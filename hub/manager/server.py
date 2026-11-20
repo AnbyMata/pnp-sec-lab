@@ -1,4 +1,7 @@
 import json, subprocess, re, os
+from session_http import SessionHTTP, ENABLED, ORIGINS
+from accounts import AccountHTTP
+from progress import ProgressHTTP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 SERVICES = {"php", "python", "spring", "db"}
 PNP_MODE = os.environ.get("PNP_MODE", "dev")
@@ -8,12 +11,16 @@ def run(args):
         return p.returncode == 0, (p.stdout + p.stderr).strip()
     except (OSError, subprocess.TimeoutExpired) as e:
         return False, str(e)
-class Handler(BaseHTTPRequestHandler):
+class Handler(ProgressHTTP, AccountHTTP, SessionHTTP, BaseHTTPRequestHandler):
     def reply(self, status, data):
         body = json.dumps(data, ensure_ascii=False).encode()
-        self.send_response(status); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+        self.send_response(status); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(body))); self.send_header("Cache-Control", "no-store"); self.account_cookie(); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
-        if self.path == "/api/config": return self.reply(200, {"mode": PNP_MODE, "tools": {"shell": PNP_MODE != "prod", "attacker": PNP_MODE != "prod"}})
+        if self.lab_host_request(): return
+        if self.progress_request(): return
+        if self.account_request(): return
+        if self.session_request(): return
+        if self.path == "/api/config": return self.reply(200, {"mode": PNP_MODE, "managedLabs": ENABLED, "tools": {"shell": PNP_MODE != "prod", "attacker": PNP_MODE != "prod" and not ENABLED, "request-workbench": not ENABLED}})
         if self.path != "/api/status": return self.reply(404, {"error":"Not found"})
         ok, output = run(["ps", "--all", "--format", "json"])
         if not ok: return self.reply(500, {"error":output})
@@ -22,10 +29,15 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(200, {"services":{x["Service"]:x.get("State", "unknown") for x in rows if x.get("Service") in SERVICES}})
         except (ValueError, KeyError) as e: self.reply(500, {"error":str(e)})
     def do_POST(self):
+        if self.lab_host_request(): return
+        if self.progress_request(): return
+        if self.account_request(): return
+        if self.session_request(): return
+        if ENABLED: return self.reply(403, {"error": "Shared service control is disabled in managed lab mode"})
         if self.path not in ("/api/service", "/api/shell", "/api/sql"): return self.reply(404, {"error":"Not found"})
         # prod: shell, SQL console and service control (docker.sock) stay off server-side, not just hidden in the UI.
         if PNP_MODE == "prod": return self.reply(403, {"error":"Disabled in prod mode"})
-        if self.headers.get("Origin") not in ("http://localhost:8000", "http://127.0.0.1:8000") or self.headers.get("Content-Type", "").split(";")[0] != "application/json": return self.reply(403, {"error":"Forbidden"})
+        if self.headers.get("Origin") not in ORIGINS or self.headers.get("Content-Type", "").split(";")[0] != "application/json": return self.reply(403, {"error":"Forbidden"})
         try:
             length = int(self.headers.get("Content-Length", 0))
             if length > 4096: return self.reply(413, {"error":"Too large"})
@@ -49,4 +61,13 @@ class Handler(BaseHTTPRequestHandler):
             ok, output = run([action, service]); self.reply(200 if ok else 500, {"output":output})
         except (ValueError, KeyError, TypeError) as e: self.reply(400, {"error":str(e)})
         except (OSError, subprocess.TimeoutExpired) as e: self.reply(500, {"error":str(e)})
-ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+    def do_HEAD(self):
+        if not self.session_request(): self.reply(405, {"error": "Method not allowed"})
+    def do_PUT(self):
+        if not self.session_request(): self.reply(405, {"error": "Method not allowed"})
+    do_DELETE = do_PUT
+    do_PATCH = do_PUT
+    do_OPTIONS = do_PUT
+
+if __name__ == '__main__':
+    ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()

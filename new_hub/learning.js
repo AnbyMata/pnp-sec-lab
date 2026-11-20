@@ -1,3 +1,4 @@
+window.PnpAuth.ready.then(() => {
 const filters = document.querySelectorAll('[data-filter]');
 const list = document.querySelector('#courses');
 const search = document.querySelector('#search');
@@ -58,3 +59,4 @@ filters.forEach((button) => button.addEventListener('click', () => {
 }));
 search.addEventListener('input', updateCourses);
 updateCourses();
+});

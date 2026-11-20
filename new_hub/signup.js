@@ -8,9 +8,15 @@ toggle.addEventListener('click', () => {
   toggle.setAttribute('aria-label', show ? '비밀번호 숨기기' : '비밀번호 표시');
   toggle.setAttribute('aria-pressed', String(show));
 });
-document.querySelector('#send-code').addEventListener('click', () => { notice.textContent = '이메일 인증 코드 발송 기능은 준비 중입니다.'; });
-document.querySelector('#verify-code').addEventListener('click', () => { notice.textContent = '인증 코드 확인 기능은 준비 중입니다.'; });
-document.querySelector('#signup-form').addEventListener('submit', event => {
+document.querySelector('#signup-form').addEventListener('submit', async event => {
   event.preventDefault();
-  notice.textContent = password.value !== document.querySelector('#password-confirm').value ? '비밀번호가 일치하지 않습니다.' : '가입 신청이 접수되었습니다. 이메일 인증과 관리자 승인 후 로그인할 수 있습니다.';
+  if(password.value !== document.querySelector('#password-confirm').value) { notice.textContent='비밀번호가 일치하지 않습니다.'; return; }
+  const button=event.currentTarget.querySelector('[type=submit]'); button.disabled=true;
+  try {
+    const response=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.querySelector('#email').value,nickname:document.querySelector('#name').value,password:password.value})});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.error || '회원가입에 실패했습니다.');
+    localStorage.setItem('pnp_authenticated','true'); localStorage.setItem('pnp_nickname',data.user.nickname);
+    location.assign('home.html');
+  } catch(error) {notice.textContent=error.message;} finally {button.disabled=false;}
 });

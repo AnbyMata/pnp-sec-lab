@@ -1,4 +1,4 @@
-if (localStorage.getItem('pnp_authenticated') !== 'true') location.replace('login.html');
+window.PnpAuth.ready.then(user=>{if(!user) {location.replace('login.html');return;}
 const readProgress = (key) => {
   try { const saved = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(saved) ? saved : []; }
   catch { return []; }
@@ -89,3 +89,4 @@ if (solvedItems.length) {
     const row = document.createElement('div'); row.className = 'challenge-row'; row.textContent = item.title; head.after(row);
   });
 }
+});

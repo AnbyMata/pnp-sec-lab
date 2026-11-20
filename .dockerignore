@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+node_modules
+reports
+backups
+extracted
+src/board/upload/*
+**/__pycache__
