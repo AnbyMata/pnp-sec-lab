@@ -26,7 +26,7 @@ def snapshot(store, uid):
 
 def leaderboard(store, uid):
     with store.db() as db:
-        users=db.execute('SELECT id,nickname FROM users ORDER BY id').fetchall()
+        users=db.execute('SELECT id,nickname FROM users WHERE active=1 ORDER BY id').fetchall()
         rows=db.execute('SELECT user_id,kind,item FROM progress').fetchall()
     counts={u['id']:{'lesson':0,'challenge':0} for u in users}
     for r in rows:

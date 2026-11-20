@@ -13,7 +13,7 @@ document.querySelector('#signup-form').addEventListener('submit', async event =>
   if(password.value !== document.querySelector('#password-confirm').value) { notice.textContent='비밀번호가 일치하지 않습니다.'; return; }
   const button=event.currentTarget.querySelector('[type=submit]'); button.disabled=true;
   try {
-    const response=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.querySelector('#email').value,nickname:document.querySelector('#name').value,password:password.value})});
+    const response=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.querySelector('#username').value,nickname:document.querySelector('#name').value,password:password.value,inviteCode:document.querySelector('#invite-code').value.trim()})});
     const data=await response.json();
     if(!response.ok) throw new Error(data.error || '회원가입에 실패했습니다.');
     localStorage.setItem('pnp_authenticated','true'); localStorage.setItem('pnp_nickname',data.user.nickname);

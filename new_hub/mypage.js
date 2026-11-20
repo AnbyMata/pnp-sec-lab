@@ -1,4 +1,6 @@
 window.PnpAuth.ready.then(user=>{if(!user) {location.replace('login.html');return;}
+document.querySelector('#account-name').textContent=user.nickname;
+document.querySelector('#account-identity').textContent=`${user.username} · PNP Security Lab 학습자`;
 const readProgress = (key) => {
   try { const saved = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(saved) ? saved : []; }
   catch { return []; }

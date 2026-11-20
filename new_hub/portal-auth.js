@@ -11,6 +11,10 @@
       const link=document.createElement('a');link.href='dashboard.html';link.textContent='대시보드';nav.append(link);
     }
     const signedIn = !!user;
+    const adminLink=nav?.querySelector('[data-admin-link]');
+    if(user?.role==='admin' && nav && !adminLink) {
+      const link=document.createElement('a');link.href='admin.html';link.textContent='관리자';link.dataset.adminLink='true';nav.append(link);
+    } else if(user?.role!=='admin') adminLink?.remove();
     document.querySelectorAll('.topbar .account').forEach(link => {
       link.href = signedIn ? 'mypage.html' : 'login.html';
       link.innerHTML = signedIn

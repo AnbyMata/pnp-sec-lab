@@ -26,13 +26,21 @@ class AccountTest(unittest.TestCase):
             response=conn.getresponse(); body=json.loads(response.read()); token=response.getheader('Set-Cookie','').split(';')[0]; status=response.status; conn.close()
             return status,body,token
         try:
-            data={'email':'member@example.com','nickname':'회원','password':'long-password-123'}
+            data={'username':'member','nickname':'회원','password':'long-password-123','role':'admin'}
             self.assertEqual(request('/api/auth/me')[1],{'user':None})
             self.assertEqual(request('/api/auth/signup',data,origin='https://evil.example')[0],403)
+            self.assertEqual(request('/api/auth/signup',data)[0],400)
+            self.assertEqual(request('/api/auth/email-request',{'username':data['username']})[0],404)
+            from admin import invites
+            with ACCOUNTS.db() as db:
+                db.execute("INSERT INTO users (id,username,nickname,salt,password,role) VALUES ('issuer','issuer','운영자','salt','hash','admin')")
+            data['inviteCode']=invites(ACCOUNTS,'issuer',{'action':'issue'})['code']
             status,body,cookie=request('/api/auth/signup',data)
             self.assertEqual(status,200); uid=body['user']['id']
             self.assertNotIn('password',body['user'])
-            self.assertEqual(request('/api/auth/signup',data)[0],409)
+            self.assertEqual(body['user']['role'],'member')
+            self.assertEqual(request('/api/admin/users',cookie=cookie)[0],403)
+            self.assertEqual(request('/api/auth/signup',data)[0],400)
             self.assertEqual(request('/api/auth/login',{**data,'password':'wrong'})[0],401)
             self.assertEqual(request('/api/auth/me',cookie=cookie)[1]['user']['id'],uid)
             self.assertEqual(request('/api/dashboard')[0],401)

@@ -16,7 +16,7 @@ const path = require('node:path');
       const reply = data => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
       if (url.hostname !== 'portal.test') return route.fulfill({ status: url.pathname === '/error' ? 500 : 200, contentType: 'text/html', body: '<h1>실습 사이트</h1>' });
       if (url.pathname === '/api/config') return reply({ managedLabs: true, tools: { shell: true, attacker: false } });
-      if (url.pathname === '/api/auth/me') return reply({user:signedIn?{id:'test-user',email:'test@example.com',nickname:'테스트'}:null});
+      if (url.pathname === '/api/auth/me') return reply({user:signedIn?{id:'test-user',username:'test',nickname:'테스트'}:null});
       if (url.pathname === '/api/progress') return reply({completedLessons:[],startedLessons:[],solvedChallenges:[]});
       if (url.pathname.startsWith('/api/lab-sessions')) {
         if (url.pathname.endsWith('/start')) { state = 'ready'; expires = now() + 3600; maxExpires = expires + 3600; challengeId = route.request().postDataJSON().challengeId; target = route.request().postDataJSON().target || 'python'; }

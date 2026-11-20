@@ -3,18 +3,20 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7f6"><title>회원가입 | PNP Security Lab</title>
-  <link rel="stylesheet" href="login.css"><link rel="stylesheet" href="signup.css">
+  <link rel="stylesheet" href="login.css"><link rel="stylesheet" href="signup.css"><link rel="stylesheet" href="login-navigation.css">
 </head>
 <body>
 <main class="page">
-  <header class="header"><span class="header-name">PNP <span>SECURITY LAB</span></span><span class="header-label">LEARN · PRACTICE · GROW</span></header>
+  <header class="header"><a class="header-name" href="home.html">PNP <span>SECURITY LAB</span></a><a class="header-name" href="home.html">← 홈으로</a></header>
   <section class="login signup-page" aria-labelledby="signup-title">
-    <div class="brand"><img src="pnp-logo-transparent.png" alt="PNP Passion Pioneer 로고"><span class="brand-line" aria-hidden="true"></span><p>PNP <strong>SECURITY LAB</strong></p></div>
-    <div class="intro"><p class="eyebrow"><span></span> CREATE ACCOUNT</p><h1 id="signup-title">함께 시작해요<span>.</span></h1><p>이메일과 비밀번호로 계정을 만들고 실습을 시작하세요.</p></div>
+    <a class="brand" href="home.html" aria-label="PNP Security Lab 홈으로"><img src="pnp-logo-transparent.png" alt="PNP Passion Pioneer 로고"><span class="brand-line" aria-hidden="true"></span><p>PNP <strong>SECURITY LAB</strong></p></a>
+    <div class="intro"><p class="eyebrow"><span></span> CREATE ACCOUNT</p><h1 id="signup-title">함께 시작해요<span>.</span></h1><p>아이디와 비밀번호로 계정을 만들고 실습을 시작하세요.</p></div>
     <form id="signup-form">
       <label for="name">닉네임</label><input id="name" name="name" type="text" placeholder="사용할 닉네임을 입력해 주세요" autocomplete="nickname" required>
-      <label for="email">이메일</label><input id="email" name="email" type="email" placeholder="이메일을 입력해 주세요" autocomplete="email" maxlength="254" required>
-      <p class="field-help">이메일 소유 확인과 비밀번호 찾기는 아직 제공하지 않습니다. 비밀번호는 10~128자로 설정해 주세요.</p>
+      <label for="username">아이디</label><input id="username" name="username" type="text" placeholder="로그인 아이디" autocomplete="username" minlength="3" maxlength="32" pattern="[A-Za-z0-9_.-]{3,32}" required>
+      <p class="field-help">아이디는 영문·숫자·밑줄·점·하이픈 3~32자로 입력해 주세요.</p>
+      <label for="invite-code">현장 가입 코드</label><input id="invite-code" type="text" autocomplete="off" maxlength="100" placeholder="운영자에게 받은 1회용 코드" required>
+      <p class="field-help">현장에서 배부받은 코드로만 가입할 수 있습니다. 비밀번호는 10~128자로 설정해 주세요.</p>
       <label for="password">비밀번호</label><div class="password-field"><input id="password" name="password" type="password" placeholder="비밀번호를 입력해 주세요" autocomplete="new-password" required><button class="show-password" type="button" aria-label="비밀번호 표시" aria-pressed="false">보기</button></div>
       <label for="password-confirm">비밀번호 확인</label><input id="password-confirm" name="password-confirm" type="password" placeholder="비밀번호를 다시 입력해 주세요" autocomplete="new-password" required>
       <button class="submit" type="submit">가입 신청 <span aria-hidden="true">↗</span></button>
@@ -23,6 +25,6 @@
 <div class="signup">이미 계정이 있으신가요? <a href="login.html">로그인 <span aria-hidden="true">→</span></a></div>
   </section>
   <footer><span>© PNP SECURITY LAB</span><span>PASSION. PIONEER. PRACTICE.</span></footer>
-</main><script src="signup.js?v=2"></script>
+</main><script src="signup.js?v=5"></script>
 </body></html>
 

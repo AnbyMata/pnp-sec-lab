@@ -2,6 +2,7 @@ import json, subprocess, re, os
 from session_http import SessionHTTP, ENABLED, ORIGINS
 from accounts import AccountHTTP
 from progress import ProgressHTTP
+from admin import AdminHTTP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 SERVICES = {"php", "python", "spring", "db"}
 PNP_MODE = os.environ.get("PNP_MODE", "dev")
@@ -11,12 +12,13 @@ def run(args):
         return p.returncode == 0, (p.stdout + p.stderr).strip()
     except (OSError, subprocess.TimeoutExpired) as e:
         return False, str(e)
-class Handler(ProgressHTTP, AccountHTTP, SessionHTTP, BaseHTTPRequestHandler):
+class Handler(AdminHTTP, ProgressHTTP, AccountHTTP, SessionHTTP, BaseHTTPRequestHandler):
     def reply(self, status, data):
         body = json.dumps(data, ensure_ascii=False).encode()
         self.send_response(status); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(body))); self.send_header("Cache-Control", "no-store"); self.account_cookie(); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
         if self.lab_host_request(): return
+        if self.admin_request(): return
         if self.progress_request(): return
         if self.account_request(): return
         if self.session_request(): return
@@ -30,6 +32,7 @@ class Handler(ProgressHTTP, AccountHTTP, SessionHTTP, BaseHTTPRequestHandler):
         except (ValueError, KeyError) as e: self.reply(500, {"error":str(e)})
     def do_POST(self):
         if self.lab_host_request(): return
+        if self.admin_request(): return
         if self.progress_request(): return
         if self.account_request(): return
         if self.session_request(): return

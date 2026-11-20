@@ -18,7 +18,7 @@ class ProgressTest(unittest.TestCase):
             store=Accounts(str(Path(folder)/'db.sqlite'));initialize(store)
             with store.db() as db:
                 for uid in ('a','b','c'):
-                    db.execute('INSERT INTO users VALUES (?,?,?,?,?)',(uid,uid+'@example.com',uid,'salt','hash'))
+                    db.execute('INSERT INTO users (id,username,nickname,salt,password) VALUES (?,?,?,?,?)',(uid,uid+'',uid,'salt','hash'))
             record(store,'a','lesson','sql-injection:ep1');record(store,'a','lesson','sql-injection:ep1')
             record(store,'b','lesson','sql-injection:ep2')
             record(store,'b','challenge','sqli-login');record(store,'b','challenge','sqli-login')
@@ -32,4 +32,4 @@ class ProgressTest(unittest.TestCase):
             with self.assertRaises(SessionError):record(store,'a','challenge','fake')
             record(store,'a','lesson','sql-injection:ep1',False)
             self.assertEqual(snapshot(store,'a')['completedLessons'],[])
-            self.assertNotIn('email',result['learning']['top'][0])
+            self.assertNotIn('username',result['learning']['top'][0])

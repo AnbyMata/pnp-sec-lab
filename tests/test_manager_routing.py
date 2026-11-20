@@ -25,7 +25,7 @@ class RoutingTest(unittest.TestCase):
 
     def test_lab_api_paths_bypass_portal_handlers_for_all_methods(self):
         labs=Mock(domain='labs.test'); labs.active.return_value={'id':'a'*48,'target':'python'}
-        paths=['/api/auth/me','/api/auth/login','/api/progress','/api/dashboard','/api/config','/api/lab-sessions/start','/api/challenges/sqli-login/verify?x=1']
+        paths=['/api/auth/me','/api/auth/login','/api/progress','/api/dashboard','/api/admin/users','/api/config','/api/lab-sessions/start','/api/challenges/sqli-login/verify?x=1']
         with patch.object(session_http,'ENABLED',True), patch.object(session_http,'LABS',labs):
             for method in ('GET','POST','HEAD','PUT','DELETE','PATCH','OPTIONS'):
                 for path in paths:

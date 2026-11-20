@@ -12,10 +12,10 @@ toggle.addEventListener('click', () => {
 });
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const email = document.querySelector('#email').value.trim().toLowerCase();
+  const username = document.querySelector('#username').value.trim().toLowerCase();
   const button=form.querySelector('[type=submit]'); button.disabled=true;
   try {
-    const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:password.value})});
+    const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password:password.value})});
     const data=await response.json();
     if(!response.ok) throw new Error(data.error || '로그인에 실패했습니다.');
     localStorage.setItem('pnp_nickname', data.user.nickname);
