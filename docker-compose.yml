@@ -3,7 +3,7 @@ services:
   nginx:
     image: nginx:alpine
     networks: [default, lab]
-    ports: ["127.0.0.1:8000:80"]
+    ports: ["0.0.0.0:8000:80"]
     volumes:
       - ./new_hub:/usr/share/nginx/html:ro
       - ./hub/lab:/opt/pnp-lab:ro
