@@ -213,8 +213,15 @@
 .tabs{overflow-x:auto}
 .tabs button{white-space:nowrap;flex:0 0 auto}
 @media(max-width:700px){
-  .tab-panel.workbench,.tab-panel.inspector,.tab-panel.exploit-server,.tab-panel.query-lab,.tab-panel.terminal,.tab-panel.tool-guide{padding:18px 14px}
+  .tab-panel.workbench,.tab-panel.inspector,.tab-panel.exploit-server,.tab-panel.query-lab,.tab-panel.terminal,.tab-panel.tool-guide,.tab-panel>.ql-log{padding:18px 14px}
   .wb-editor .wb-url{flex-basis:100%;order:-1}
   .wb-hrow,.wb-part-head,.xs-editor,.xs-url-row{flex-wrap:wrap}
   .wb-hname,.wb-fkey,.wb-pname,.wb-pfile{width:100%}
 }
+
+/* standalone server-log tab: .ql-log sits directly in the panel, so give it the same padding as other tools */
+.tab-panel>.ql-log{margin-top:0;border-top:0;padding:22px 26px}
+
+/* tools-lab header: challenge.css absolute-positions .lab-header for the challenge page; keep it in flow here */
+.lab[aria-label="도구 실험실"] .lab-header{position:static;display:flex;align-items:flex-end;gap:14px;margin-bottom:14px}
+.lab[aria-label="도구 실험실"] .lab-note{padding-bottom:5px;font-size:13px;font-weight:700;color:#777}
